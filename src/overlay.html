@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;700&display=swap">
+  </head>
+  <body>
+    <div id="overlay">
+      <canvas id="selectionCanvas"></canvas>
+      <div id="controlPanel">
+        <button id="summarizeButton">Summarize</button>
+        <button id="translateButton">Translate</button>
+        <button id="explainButton">Explain</button>
+        <button id="answerButton">Answer</button>
+        <button id="cancelButton">Cancel</button>
+      </div>
+    </div>
+    <script src="overlay.js"></script>
+  </body>
+</html>
+
+<style>
+  html, body {
+    margin: 0; padding: 0; 
+    width: 100%; height: 100%; 
+    overflow: hidden; 
+    cursor: crosshair;
+    font-family: 'Onest', sans-serif;
+  }
+  #overlay {
+    display: flex;
+    flex-direction: row;
+  }
+  #selectionCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.1);
+  }
+
+  #controlPanel {
+    position: absolute;
+    display: none;
+    flex-direction: column;
+    width: max-content;
+    gap: 10px;
+    top: 50%;
+    right: 10px;
+    z-index: 9999;
+  }
+
+  button {
+    font-family: 'Onest', sans-serif;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #0070d2;
+    border: none; 
+    border-radius: 0.5rem;
+    padding: 10px 20px; 
+    cursor: pointer;
+    transition: background-color 0.3s ease; 
+  }
+
+  button:hover {
+    background-color: #005fb2; 
+  }
+
+  #cancelButton {
+    background-color: #ff4c4c; 
+  }
+
+  #cancelButton:hover {
+    background-color: #e04343;
+  }
+
+</style>

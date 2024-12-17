@@ -5,7 +5,11 @@ const summarizeButton = document.getElementById('summarizeButton');
 const translateButton = document.getElementById('translateButton');
 const explainButton = document.getElementById('explainButton');
 const answerButton = document.getElementById('answerButton');
+const customButton = document.getElementById('customButton');
 const cancelButton = document.getElementById('cancelButton');
+const customTextarea = document.getElementById('customTextarea');
+const confirmButton = document.getElementById('confirmButton');
+const customText = document.getElementById('customText');
 
 let isSelecting = false;
 let startX = 0, startY = 0;
@@ -17,7 +21,6 @@ canvas.height = window.innerHeight;
 function drawSelection() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-  controlPanel.style.display = 'none';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const x = Math.min(startX, endX);
@@ -42,6 +45,11 @@ canvas.addEventListener('mousedown', (e) => {
 
 canvas.addEventListener('mousemove', (e) => {
   if (isSelecting) {
+    controlPanel.style.display = 'none';
+    customTextarea.style.display = 'none';
+    confirmButton.style.display = 'none';
+    customTextarea.value = '';
+    customButton.classList.remove('active');
     endX = e.clientX;
     endY = e.clientY;
     drawSelection();
@@ -81,6 +89,23 @@ canvas.addEventListener('mouseup', () => {
     explainButton.onclick = () => {
       window.electronAPI.captureRegion({ x, y, width: w, height: h }, "explain");
     }
+
+    customButton.onclick = () => {
+      customTextarea.style.display = 'block';
+      confirmButton.style.display = 'block';
+      customButton.classList.add('active');
+      customTextarea.focus();
+    }
+
+    confirmButton.onclick = () => {
+      const customPrompt = customTextarea.value;
+      if (customPrompt) {
+        window.electronAPI.captureRegion({ x, y, width: w, height: h }, customPrompt);
+      }
+      customTextarea.style.display = 'none';
+      confirmButton.style.display = 'none';
+      customTextarea.value = '';
+    };
 
     answerButton.onclick = () => {
       window.electronAPI.captureRegion({ x, y, width: w, height: h }, "answer");

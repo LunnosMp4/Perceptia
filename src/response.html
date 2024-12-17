@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;700&display=swap">
+    <link rel="stylesheet" href="response.css" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <title>AI Response</title>
+  </head>
+  <body>
+    <header></header>
+    <div id="responseContent"></div>
+    <button id="closeButton">
+      <svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#000000"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
+    </button>
+    <button id="copyButton">
+      <svg xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 -960 960 960" width="26px" fill="#000000"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg>
+    </button>
+    <script>
+      const responseContainer = document.getElementById('responseContent');
+      let fullResponse = "";
+
+      window.electronAPI.onAIStream((chunk) => {
+        fullResponse += chunk;
+        responseContainer.innerHTML = marked.parse(fullResponse);
+      });
+
+      const closeButton = document.getElementById('closeButton');
+      closeButton.addEventListener('click', () => {
+        window.electronAPI.closeWindow();
+      });
+
+      const copyButton = document.getElementById('copyButton');
+      copyButton.addEventListener('click', () => {
+        navigator.clipboard.writeText(fullResponse);
+      });
+    </script>
+  </body>
+</html>

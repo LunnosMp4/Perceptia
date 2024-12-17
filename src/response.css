@@ -1,0 +1,109 @@
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 30px;
+  width: calc(100% - 80px);
+  background-color: #0000001d;
+  -webkit-app-region: drag;
+  z-index: 9999;
+}
+
+body {
+  font-family: 'Onest', sans-serif;
+  margin: 0;
+  padding: 20px;
+  color: #000000cb;
+  overflow-y: auto;
+}
+
+#responseContent {
+  margin-top: 20px;
+  white-space: pre-wrap;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+#closeButton {
+  position: fixed;
+  top: 0;
+  right: 0;
+  padding: 2px;
+  width: 40px;
+  height: 30px;
+  background-color: #0000001d;
+  border: none;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#closeButton svg {
+  fill: #00000080;
+}
+
+#closeButton:hover svg {
+  fill: #000000bc;
+  animation: rotate 0.1s ease-in;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(45deg);
+  }
+  100% {
+    transform: rotate(90deg);
+  }
+}
+
+#copyButton {
+  position: fixed;
+  top: 0;
+  right: 40px;
+  padding: 2px;
+  width: 40px;
+  height: 30px;
+  background-color: #0000001d;
+  border: none;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#copyButton svg {
+  fill: #00000080;
+}
+
+#copyButton:hover svg {
+  fill: #000000bc;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #0000001d;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #0000001d;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #0000003d;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: #0000005d;
+}
+
+::selection {
+  background-color: #fffb95ad;
+}

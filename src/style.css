@@ -39,6 +39,7 @@ html, body {
   cursor: pointer;
   width: 40px;
   min-height: 40px;
+  max-height: 40px;
   transition: width 0.4s ease;
 }
 
@@ -75,4 +76,37 @@ html, body {
 
 #cancelButton {
   background-color: #ffbaba;
+}
+
+.active {
+  width: fit-content !important;
+}
+
+.active span {
+  display: none !important;
+}
+
+.active svg {
+  display: none;
+}
+
+textarea {
+  font-family: 'Onest', sans-serif;
+  font-size: 1.1em;
+  padding: 10px;
+  border: none;
+  border-radius: 20px;
+  width: 100%;
+  max-height: 40px;
+  resize: none;
+}
+
+textarea:focus {
+  outline: none;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
 }

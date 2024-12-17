@@ -14,6 +14,53 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let overlayWindow = null;
+let responseWindow = null;
+
+async function createResponseWindow(response) {
+  if (responseWindow && !responseWindow.isDestroyed()) {
+    responseWindow.focus();
+    return;
+  }
+
+  const { x, y } = screen.getCursorScreenPoint();
+  const currentDisplay = screen.getDisplayNearestPoint({ x, y });
+  const { bounds } = currentDisplay;
+
+  const windowX = bounds.x + bounds.width - 650;
+  const windowY = bounds.y + 50;
+
+  responseWindow = new BrowserWindow({
+    width: 600,
+    height: 400,
+    x: windowX,
+    y: windowY,
+    title: "AI Response",
+    resizable: false,
+    transparent: false,
+    frame: false,
+    backgroundMaterial: 'mica',
+    autoHideMenuBar: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'response-preload.js'),
+    },
+  });
+
+  responseWindow.loadFile('src/response.html');
+  responseWindow.setAlwaysOnTop(true, 'floating');
+  responseWindow.setFullScreenable(false);
+  responseWindow.setResizable(false);
+  responseWindow.setMovable(true);
+
+  responseWindow.webContents.on('did-finish-load', () => {
+    responseWindow.webContents.send('ai-response', response);
+  });
+
+  responseWindow.on('closed', () => {
+    responseWindow = null;
+  });
+}
 
 async function createOverlay() {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
@@ -72,6 +119,10 @@ function registerGlobalShortcut() {
   globalShortcut.register('Control+Alt+N', () => {
     createOverlay();
   });
+
+  globalShortcut.register('Control+Alt+G', () => {
+    createResponseWindow("This is a test response from the AI model.");
+  });
 }
 
 app.whenReady().then(() => {
@@ -95,37 +146,42 @@ app.on('will-quit', () => {
 function getPrompt(mode) {
   switch (mode) {
     case "summary":
-      return "Summarize the content of this screenshot into a concise and clear overview. Make a short answer and go straight to the point. Include the key points or highlights.";
+      return "Summarize the content of this screenshot into a concise and clear overview. Use markdown format. Make a short answer and go straight to the point. Include the key points or highlights.";
     case "translate":
       return "Translate the text in this screenshot into English exactly, with no rephrasing or modifications. Provide only the translation, without explanations or additional comments.";
     case "explain":
-      return "Provide a detailed explanation of the content, focusing on its context, background, and key ideas. Clarify any important terms and explain the significance of the events or concepts mentioned. Avoid describing the screenshot or app interface.";
+      return "Provide a detailed explanation of the content, focusing on its context, background, and key ideas. Use markdown format. Clarify any important terms and explain the significance of the events or concepts mentioned. Avoid describing the screenshot or app interface.";
     case "answer":
-      return "Answer the question or provide the information requested in this screenshot. Be concise and clear. Include only the relevant information needed to answer the question or provide the requested information. Do not include any additional information or explanations.";
+      return "Answer the question or provide the information requested in this screenshot. Use markdown format. Be concise and clear. Include only the relevant information needed to answer the question or provide the requested information. Do not include any additional information or explanations.";
     default:
-      return "Analyze the content of this screenshot and provide relevant insights or actions.";
+      return "Provide a clear and accurate response based on the user's question. Use markdown format. If the question is about identifying or explaining something, ensure you focus on the core details and provide relevant context. Avoid deviating from the user's request, and answer in a way that directly addresses their query. Now, here's the user's prompt:" + mode;
   }
 }
 
 async function sendAIRequest(imageDataURL, prompt) {
   try {
-    const chatCompletion = await client.chat.completions.create({
+    // Create the chat completion request with streaming enabled
+    const stream = await client.chat.completions.create({
       model: "llama-3.2-90b-vision-preview",
       messages: [
         {
-          "role": "user",
-          "content": [
-            { "type": "text", "text": prompt },
-            {
-              "type": "image_url",
-              "image_url": { "url": imageDataURL }
-            }
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: imageDataURL } }
           ]
         }
-      ]
+      ],
+      stream: true,
     });
 
-    console.log("AI response:", chatCompletion.choices[0].message.content);
+    await createResponseWindow("");
+    responseWindow.webContents.on('did-finish-load', async () => {
+      for await (const chunk of stream) {
+        const text = chunk.choices?.[0]?.delta?.content || "";
+        responseWindow.webContents.send('ai-stream', text);
+      }
+    });
   } catch (error) {
     console.error("Error calling the AI model:", error);
   }
@@ -166,9 +222,6 @@ ipcMain.handle('capture-region', async (event, { x, y, width, height }, mode) =>
     height: pheight
   });
   const buffer = croppedImage.toPNG();
-  const filePath = path.join(app.getPath('temp'), 'capture.png');
-  fs.writeFileSync(filePath, buffer);
-  console.log("Image saved to:", filePath);
 
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.close();
@@ -183,5 +236,12 @@ ipcMain.handle('cancel-overlay', async () => {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.close();
     overlayWindow = null;
+  }
+});
+
+ipcMain.handle('close-window', async () => {
+  if (responseWindow && !responseWindow.isDestroyed()) {
+    responseWindow.close();
+    responseWindow = null;
   }
 });

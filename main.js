@@ -10,7 +10,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -21,24 +20,28 @@ async function createOverlay() {
     return;
   }
 
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  const { x, y } = screen.getCursorScreenPoint();
+  const currentDisplay = screen.getDisplayNearestPoint({ x, y });
+
+  const { bounds } = currentDisplay;
 
   overlayWindow = new BrowserWindow({
-    x: 0,
-    y: 0,
-    width,
-    height,
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
     frame: false,
     transparent: true,
     fullscreen: true,
     alwaysOnTop: true,
     skipTaskbar: true,
+    resizable: false,
     show: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
-    }
+    },
   });
 
   overlayWindow.webContents.on('before-input-event', (event, input) => {
@@ -56,6 +59,9 @@ async function createOverlay() {
   overlayWindow.setAlwaysOnTop(true, 'floating');
   overlayWindow.setVisibleOnAllWorkspaces(true);
   overlayWindow.setFullScreenable(false);
+  overlayWindow.setFullScreen(true);
+  overlayWindow.setResizable(false);
+  overlayWindow.setMovable(false);
 
   overlayWindow.on('ready-to-show', () => {
     overlayWindow.show();
@@ -126,9 +132,12 @@ async function sendAIRequest(imageDataURL, prompt) {
 }
 
 ipcMain.handle('capture-region', async (event, { x, y, width, height }, mode) => {
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width: logicalWidth, height: logicalHeight } = primaryDisplay.bounds;
-  const scaleFactor = primaryDisplay.scaleFactor || 1;
+  const { x: cursorX, y: cursorY } = screen.getCursorScreenPoint();
+  const currentDisplay = screen.getDisplayNearestPoint({ x: cursorX, y: cursorY });
+  const { bounds, scaleFactor } = currentDisplay;
+
+  const logicalWidth = bounds.width;
+  const logicalHeight = bounds.height;
 
   const physicalWidth = Math.floor(logicalWidth * scaleFactor);
   const physicalHeight = Math.floor(logicalHeight * scaleFactor);
@@ -143,8 +152,12 @@ ipcMain.handle('capture-region', async (event, { x, y, width, height }, mode) =>
     thumbnailSize: { width: physicalWidth, height: physicalHeight }
   });
 
-  const primarySource = sources[0];
-  const thumbnail = primarySource.thumbnail;
+  const currentSource = sources.find(source => source.display_id === `${currentDisplay.id}`);
+  if (!currentSource) {
+    throw new Error('Could not find source for current display.');
+  }
+
+  const thumbnail = currentSource.thumbnail;
 
   const croppedImage = thumbnail.crop({
     x: px,
@@ -152,8 +165,6 @@ ipcMain.handle('capture-region', async (event, { x, y, width, height }, mode) =>
     width: pwidth,
     height: pheight
   });
-  const imageDataURL = croppedImage.toDataURL();
-  
   const buffer = croppedImage.toPNG();
   const filePath = path.join(app.getPath('temp'), 'capture.png');
   fs.writeFileSync(filePath, buffer);
@@ -165,7 +176,7 @@ ipcMain.handle('capture-region', async (event, { x, y, width, height }, mode) =>
   }
 
   const prompt = getPrompt(mode);
-  await sendAIRequest(imageDataURL, prompt);
+  await sendAIRequest(croppedImage.toDataURL(), prompt);
 });
 
 ipcMain.handle('cancel-overlay', async () => {

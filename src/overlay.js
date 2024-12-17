@@ -60,6 +60,15 @@ canvas.addEventListener('mouseup', () => {
     controlPanel.style.flexDirection = 'column';
     controlPanel.style.top = `${y}px`;
     controlPanel.style.left = `${x + w + 10}px`;
+    
+    const controlPanelHeight = controlPanel.clientHeight;
+    if (y + controlPanelHeight > window.innerHeight) {
+      controlPanel.style.top = `${window.innerHeight - controlPanelHeight}px`;
+    }
+    const controlPanelWidth = controlPanel.clientWidth;
+    if (x + w + controlPanelWidth > window.innerWidth) {
+      controlPanel.style.left = `${x - controlPanelWidth - 10}px`;
+    }
 
     summarizeButton.onclick = () => {
       window.electronAPI.captureRegion({ x, y, width: w, height: h }, "summary");

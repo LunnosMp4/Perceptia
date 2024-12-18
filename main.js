@@ -146,13 +146,13 @@ app.on('will-quit', () => {
 function getPrompt(mode) {
   switch (mode) {
     case "summary":
-      return "Summarize the content of this screenshot into a concise and clear overview. Use markdown format. Make a short answer and go straight to the point. Include the key points or highlights.";
+      return "Summarize the content of this screenshot into a concise and clear overview. Use markdown format. Make a short answer and go straight to the point. Include the key points or highlights. Avoid unnecessary details or lengthy explanations. Focus on summarizing the main ideas or events in the screenshot.";
     case "translate":
-      return "Translate the text in this screenshot into English exactly, with no rephrasing or modifications. Provide only the translation, without explanations or additional comments.";
+      return "Translate the text in this screenshot into " + "English" + " exactly, with no rephrasing or modifications. Provide only the translation, without explanations or additional comments. Avoid describing the screenshot or app interface.";
     case "explain":
       return "Provide a detailed explanation of the content, focusing on its context, background, and key ideas. Use markdown format. Clarify any important terms and explain the significance of the events or concepts mentioned. Avoid describing the screenshot or app interface.";
     case "answer":
-      return "Answer the question or provide the information requested in this screenshot. Use markdown format. Be concise and clear. Include only the relevant information needed to answer the question or provide the requested information. Do not include any additional information or explanations.";
+      return "Read and answer the question or provide the requested information from the screenshot. For multiple-choice questions, identify the correct answer clearly. Use markdown format and be concise. Include only the necessary information to answer the question or provide the requested details. Avoid any additional explanations or irrelevant information.";
     default:
       return "Provide a clear and accurate response based on the user's question. Use markdown format. If the question is about identifying or explaining something, ensure you focus on the core details and provide relevant context. Avoid deviating from the user's request, and answer in a way that directly addresses their query. Now, here's the user's prompt:" + mode;
   }

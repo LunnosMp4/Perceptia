@@ -3,16 +3,34 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "dotenv": "^16.4.7",
-    "electron": "^33.2.1",
     "groq-sdk": "^0.9.1",
     "marked": "^15.0.4"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.Perceptia.app",
+    "productName": "Perceptia",
+    "directories": {
+      "output": "dist"
+    },
+    "extraResources": [
+      ".env"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+
 }

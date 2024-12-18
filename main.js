@@ -16,7 +16,10 @@ const __dirname = dirname(__filename);
 let overlayWindow = null;
 let responseWindow = null;
 
-async function createResponseWindow(response) {
+let lastPrompt = null;
+let lastScreenshot = null;
+
+async function createResponseWindow() {
   if (responseWindow && !responseWindow.isDestroyed()) {
     responseWindow.focus();
     return;
@@ -52,10 +55,6 @@ async function createResponseWindow(response) {
   responseWindow.setFullScreenable(false);
   responseWindow.setResizable(false);
   responseWindow.setMovable(true);
-
-  responseWindow.webContents.on('did-finish-load', () => {
-    responseWindow.webContents.send('ai-response', response);
-  });
 
   responseWindow.on('closed', () => {
     responseWindow = null;
@@ -117,11 +116,15 @@ async function createOverlay() {
 
 function registerGlobalShortcut() {
   globalShortcut.register('Control+Alt+N', () => {
+    if (responseWindow && !responseWindow.isDestroyed()) {
+      responseWindow.close();
+      responseWindow = null;
+    }
     createOverlay();
   });
 
   globalShortcut.register('Control+Alt+G', () => {
-    createResponseWindow("This is a test response from the AI model.");
+    createResponseWindow();
   });
 }
 
@@ -150,7 +153,7 @@ function getPrompt(mode) {
     case "translate":
       return "Translate the text in this screenshot into " + "English" + " exactly, with no rephrasing or modifications. Provide only the translation, without explanations or additional comments. Avoid describing the screenshot or app interface.";
     case "explain":
-      return "Provide a detailed explanation of the content, focusing on its context, background, and key ideas. Use markdown format. Clarify any important terms and explain the significance of the events or concepts mentioned. Avoid describing the screenshot or app interface.";
+      return "Provide a detailed explanation of the content, focusing on its context, and key ideas. Use markdown format. Clarify any important terms and explain the significance of the events or concepts mentioned. If the text is short or unclear provide an explanation / definition on the text. Avoid irrelevant information or personal opinions. Do not summarize the content, but rather explain it in detail. Do not describe the screenshot or app interface.";
     case "answer":
       return "Read and answer the question or provide the requested information from the screenshot. For multiple-choice questions, identify the correct answer clearly. Use markdown format and be concise. Include only the necessary information to answer the question or provide the requested details. Avoid any additional explanations or irrelevant information.";
     default:
@@ -160,7 +163,6 @@ function getPrompt(mode) {
 
 async function sendAIRequest(imageDataURL, prompt) {
   try {
-    // Create the chat completion request with streaming enabled
     const stream = await client.chat.completions.create({
       model: "llama-3.2-90b-vision-preview",
       messages: [
@@ -173,19 +175,27 @@ async function sendAIRequest(imageDataURL, prompt) {
         }
       ],
       stream: true,
+      temperature: 0.5,
     });
 
-    await createResponseWindow("");
-    responseWindow.webContents.on('did-finish-load', async () => {
-      for await (const chunk of stream) {
-        const text = chunk.choices?.[0]?.delta?.content || "";
-        responseWindow.webContents.send('ai-stream', text);
-      }
-    });
+    lastPrompt = prompt;
+    lastScreenshot = imageDataURL;
+    await createResponseWindow();
+
+    for await (const chunk of stream) {
+      const text = chunk.choices?.[0]?.delta?.content || "";
+      responseWindow.webContents.send('ai-stream', text);
+    }
   } catch (error) {
     console.error("Error calling the AI model:", error);
   }
 }
+
+ipcMain.handle('request-ai-stream', async () => {
+  if (lastPrompt && lastScreenshot) {
+    await sendAIRequest(lastScreenshot, lastPrompt);
+  }
+});
 
 ipcMain.handle('capture-region', async (event, { x, y, width, height }, mode) => {
   const { x: cursorX, y: cursorY } = screen.getCursorScreenPoint();

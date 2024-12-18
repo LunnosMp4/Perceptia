@@ -3,7 +3,7 @@ header {
   top: 0;
   left: 0;
   height: 30px;
-  width: calc(100% - 80px);
+  width: calc(100% - 120px);
   background-color: #0000001d;
   -webkit-app-region: drag;
   z-index: 9999;
@@ -24,13 +24,11 @@ body {
   line-height: 1.6;
 }
 
-#closeButton {
+.action {
   position: fixed;
-  top: 0;
-  right: 0;
-  padding: 2px;
   width: 40px;
   height: 30px;
+  padding: 2px;
   background-color: #0000001d;
   border: none;
   cursor: pointer;
@@ -39,12 +37,20 @@ body {
   z-index: 9999;
 }
 
-#closeButton svg {
+.action svg {
   fill: #00000080;
 }
 
-#closeButton:hover svg {
+.action:hover svg {
   fill: #000000bc;
+}
+
+#closeButton {
+  top: 0;
+  right: 0;
+}
+
+#closeButton:hover svg {
   animation: rotate 0.1s ease-in;
 }
 
@@ -61,26 +67,13 @@ body {
 }
 
 #copyButton {
-  position: fixed;
   top: 0;
   right: 40px;
-  padding: 2px;
-  width: 40px;
-  height: 30px;
-  background-color: #0000001d;
-  border: none;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
 }
 
-#copyButton svg {
-  fill: #00000080;
-}
-
-#copyButton:hover svg {
-  fill: #000000bc;
+#redoButton {
+  top: 0;
+  right: 80px;
 }
 
 ::-webkit-scrollbar {

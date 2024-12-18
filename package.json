@@ -31,7 +31,11 @@
     "win": {
       "target": "nsis"
     },
-    "publish": "never"
+    "publish": {
+      "provider": "github",
+      "owner": "LunnosMp4",
+      "repo": "Perceptia"
+    }
   }
 
 }

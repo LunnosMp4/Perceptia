@@ -18,6 +18,7 @@ let responseWindow = null;
 
 let lastPrompt = null;
 let lastScreenshot = null;
+let currentLanguage = "English";
 
 async function createResponseWindow() {
   if (responseWindow && !responseWindow.isDestroyed()) {
@@ -101,6 +102,13 @@ async function createOverlay() {
   });
 
   overlayWindow.loadFile('src/overlay.html');
+
+  overlayWindow.webContents.on('did-finish-load', async () => {
+    await overlayWindow.webContents.executeJavaScript(`
+      document.getElementById('languageSelect').value = "${currentLanguage}";
+    `);
+  });
+
   overlayWindow.setIgnoreMouseEvents(false);
   overlayWindow.setAlwaysOnTop(true, 'floating');
   overlayWindow.setVisibleOnAllWorkspaces(true);
@@ -147,11 +155,14 @@ app.on('will-quit', () => {
 });
 
 function getPrompt(mode) {
+  if (mode.startsWith("translate") && mode.split(" ").length === 2) {
+    const language = mode.split(" ")[1];
+    return "Translate the text in this screenshot into " + language + " exactly, with no rephrasing or modifications, do not rewrite the original text. Provide only the translation, without explanations or additional comments. Avoid describing the screenshot or app interface.";
+  }
+
   switch (mode) {
     case "summary":
       return "Summarize the content of this screenshot into a concise and clear overview. Use markdown format. Make a short answer and go straight to the point. Include the key points or highlights. Avoid unnecessary details or lengthy explanations. Focus on summarizing the main ideas or events in the screenshot.";
-    case "translate":
-      return "Translate the text in this screenshot into " + "English" + " exactly, with no rephrasing or modifications. Provide only the translation, without explanations or additional comments. Avoid describing the screenshot or app interface.";
     case "explain":
       return "Provide a detailed explanation of the content, focusing on its context, and key ideas. Use markdown format. Clarify any important terms and explain the significance of the events or concepts mentioned. If the text is short or unclear provide an explanation / definition on the text. Avoid irrelevant information or personal opinions. Do not summarize the content, but rather explain it in detail. Do not describe the screenshot or app interface.";
     case "answer":
@@ -254,4 +265,8 @@ ipcMain.handle('close-window', async () => {
     responseWindow.close();
     responseWindow = null;
   }
+});
+
+ipcMain.handle('save-language', async (event, language) => {
+  currentLanguage = language;
 });

@@ -83,8 +83,9 @@ canvas.addEventListener('mouseup', () => {
     };
 
     translateButton.onclick = () => {
-      window.electronAPI.captureRegion({ x, y, width: w, height: h }, "translate");
-    }
+      const language = document.getElementById('languageSelect').value;
+      window.electronAPI.captureRegion({ x, y, width: w, height: h }, `translate ${language}`);
+    };
 
     explainButton.onclick = () => {
       window.electronAPI.captureRegion({ x, y, width: w, height: h }, "explain");
@@ -117,4 +118,9 @@ canvas.addEventListener('mouseup', () => {
   } else {
     window.electronAPI.cancelOverlay();
   }
+});
+
+document.getElementById('languageSelect').addEventListener('change', (event) => {
+  const selectedLanguage = event.target.value;
+  window.electronAPI.saveLanguage(selectedLanguage);
 });
